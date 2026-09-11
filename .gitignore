@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+pitchboard.db
+.venv/
+venv/
+.streamlit/secrets.toml
+.DS_Store
