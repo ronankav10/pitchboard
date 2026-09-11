@@ -12,7 +12,7 @@ need Claude to run.
 ## Where it lives
 - **Local folder:** `~/pitchboard` on your Mac (`app.py`, `dayrules.py`,
   `db.py`, `constants.py`, `data/drills.json`, and this file)
-- **GitHub:** not pushed yet — see "Next steps" below
+- **GitHub:** `github.com/ronankav10/pitchboard` — should be a **private** repo
 - **Deployed app:** not deployed yet — see "Next steps" below
 
 ## Making changes going forward
@@ -71,12 +71,11 @@ you'd rather handle it differently (e.g. stripping that content out of
 what goes to GitHub and keeping it local-only).
 
 ## Next steps (not done yet)
-1. Create a **private** GitHub repo (e.g. `gh repo create pitchboard
-   --private --source=. --remote=origin` from inside `~/pitchboard`, or
-   via github.com — same account you used for HIT Builder, so
-   `gh auth login` may already be done).
-2. `git push -u origin main`.
-3. Deploy on [share.streamlit.io](https://share.streamlit.io), then set
+1. ~~Create a private GitHub repo and push~~ — done, pushed to
+   `github.com/ronankav10/pitchboard`. Worth a quick check on github.com
+   that it's set to **Private** (Settings → General → Danger Zone shows
+   current visibility).
+2. Deploy on [share.streamlit.io](https://share.streamlit.io), then set
    the app to **Private** under its Share settings and add viewers by
    email.
 
