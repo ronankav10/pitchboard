@@ -20,11 +20,9 @@ db.seed_if_empty()
 
 st.markdown("## 📅 Season fixtures")
 st.caption(
-    "Add each match once — every day in the week planner is labelled automatically "
-    "(MD-4…MD+2) from its gap to the nearest fixture. In a congested run, taper into "
-    "the next match takes priority over recovery from the last one, so recovery days "
-    "get compressed or skipped — override any single day in the builder if you'd "
-    "rather call it differently."
+    "Add each match once — days are labelled MD-4…MD+2 automatically. In a congested "
+    "run, the next match takes priority over recovery from the last one; override any "
+    "day manually in the planner if needed."
 )
 
 with st.form("add_fixture_form", clear_on_submit=True):
@@ -81,11 +79,7 @@ else:
 
 st.divider()
 with st.expander("Reload the official 2026-27 Serie A calendar"):
-    st.caption(
-        "Replaces every fixture below with Parma Calcio 1913's full 38-match Serie A "
-        "2026-27 calendar. Useful if the list above gets out of sync (a postponement, "
-        "a typo) — this does not touch anything in the week planner itself."
-    )
+    st.caption("Replaces the list below with the full official calendar — doesn't touch the week planner.")
     if st.button("Reload from data/fixtures_2026_27.json"):
         with open(os.path.join(DATA_DIR, "fixtures_2026_27.json")) as f:
             db.replace_all_fixtures(json.load(f))

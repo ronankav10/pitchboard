@@ -9,6 +9,7 @@ used here.
 
 import json
 import os
+import re
 from datetime import date, timedelta
 
 import pandas as pd
@@ -79,6 +80,43 @@ def intensity_minutes(session):
 
 def drills_for_zone(zone):
     return [d for d in DRILL_LIBRARY if d["c"] == zone]
+
+
+_NUM_RE = re.compile(r"\d+(?:\.\d+)?")
+
+
+def target_upper(target_str):
+    """Top of a target range like "5.5–6.0 km" -> 6.0, or the single value
+    in "80'" -> 80. None if there's no target or no number in it."""
+    if not target_str:
+        return None
+    nums = [float(n) for n in _NUM_RE.findall(target_str)]
+    return max(nums) if nums else None
+
+
+def over_by_25pct(actual_str, target_str):
+    """True if actual_str, parsed as a number, beats target_str's upper
+    bound by 25% or more. None (not red/green, just no verdict) if either
+    side doesn't parse -- an empty field or a target with no number."""
+    upper = target_upper(target_str)
+    if upper is None:
+        return None
+    try:
+        actual = float(str(actual_str).strip())
+    except (TypeError, ValueError):
+        return None
+    return actual > upper * 1.25
+
+
+def render_target_note(actual_str, target_str):
+    """Caption under a load field: plain grey when on/under target (or
+    when there's nothing to compare), red when 25%+ over it."""
+    if not target_str:
+        return
+    if over_by_25pct(actual_str, target_str):
+        st.markdown(f":red[**{actual_str} — 25%+ over target ({target_str})**]")
+    else:
+        st.caption(f"target {target_str}")
 
 
 def drills_for_zone_and_players(zone, players):
@@ -246,41 +284,17 @@ with main_col:
             on_change=lambda: save_session_field(sel_date_str, fixtures, players=st.session_state[f"players_{sel_date_str}"]),
         )
 
-    with st.expander(f"Key things to manipulate — {code or 'General'}", expanded=True):
-        st.markdown(f"**{info['title']}**")
-        st.write(info["aim"])
-        target_fields = [
-            ("Duration", info.get("duration")), ("TD", info.get("td")),
-            ("HSR", info.get("hsr")), ("Mech Work", info.get("mw")),
-            ("Work:Rest", info.get("work_rest")),
-        ]
-        target_fields = [t for t in target_fields if t[1]]
-        if target_fields:
-            tcols = st.columns(len(target_fields))
-            for tcol, (label, value) in zip(tcols, target_fields):
-                tcol.metric(label, value)
-        else:
-            st.caption("No fixed numeric targets for this day.")
-        if info["avoid"]:
-            st.markdown("**Avoid:**")
-            for a in info["avoid"]:
-                st.markdown(f"- {a}")
-        if info["suggested_zones"]:
-            st.caption("Suggested drill categories: " + ", ".join(info["suggested_zones"]))
-
     st.markdown("#### Estimated training load")
     l1, l2, l3, l4 = st.columns(4)
     load = session.get("load") or dict(EMPTY_LOAD)
     with l1:
         v_td = st.text_input("TD (km)", value=load.get("td", ""), key=f"td_{sel_date_str}",
                               on_change=lambda: save_session_field(sel_date_str, fixtures, load={**(db.get_session(sel_date_str) or blank_session(sel_date_str, fixtures))["load"], "td": st.session_state[f"td_{sel_date_str}"]}))
-        if info.get("td"):
-            st.caption(f"target {info['td']}")
+        render_target_note(v_td, info.get("td"))
     with l2:
         v_hsr = st.text_input("HSR (m)", value=load.get("hsr", ""), key=f"hsr_{sel_date_str}",
                                on_change=lambda: save_session_field(sel_date_str, fixtures, load={**(db.get_session(sel_date_str) or blank_session(sel_date_str, fixtures))["load"], "hsr": st.session_state[f"hsr_{sel_date_str}"]}))
-        if info.get("hsr"):
-            st.caption(f"target {info['hsr']}")
+        render_target_note(v_hsr, info.get("hsr"))
     with l3:
         v_sprint = st.text_input("Sprint distance (m)", value=load.get("sprint", ""), key=f"sprint_{sel_date_str}",
                                   on_change=lambda: save_session_field(sel_date_str, fixtures, load={**(db.get_session(sel_date_str) or blank_session(sel_date_str, fixtures))["load"], "sprint": st.session_state[f"sprint_{sel_date_str}"]}))
@@ -291,10 +305,7 @@ with main_col:
         st.caption("coach estimate")
 
     st.markdown("#### Session blocks")
-    st.caption(
-        "Edit directly in the table — use the + row at the bottom to add a block, "
-        "or the picker below to add one from your drill library."
-    )
+    st.caption("Edit directly, or add from the picker below.")
     blocks = session.get("blocks") or []
     blocks_df = pd.DataFrame(blocks, columns=BLOCK_COLUMNS) if blocks else pd.DataFrame(columns=BLOCK_COLUMNS)
 
@@ -329,7 +340,7 @@ with main_col:
     with st.expander("Quick add from drill library"):
         current_players = int(session.get("players") or 0)
         if current_players > 0:
-            st.caption(f"Filtered to drills that fit {current_players} players — set \"Players available\" to 0 above to see everything.")
+            st.caption(f"Filtered to {current_players} players (set to 0 for all).")
         qa1, qa2, qa3 = st.columns([1, 2, 1])
         with qa1:
             qa_zone = st.selectbox("Category", ZONES, key=f"qa_zone_{sel_date_str}")
@@ -349,17 +360,17 @@ with main_col:
             else:
                 qa_drill = None
                 if hidden_count:
-                    st.caption(f"All {hidden_count} drills in this category need more than {current_players} players — raise the count above or type a name straight into the table instead.")
+                    st.caption(f"All {hidden_count} need more players — type a name into the table instead.")
                 else:
-                    st.caption("No drills in the library for this category yet — type a name straight into the table instead.")
+                    st.caption("No drills for this category — type one into the table.")
             if options and hidden_count:
-                st.caption(f"{hidden_count} more in this category need more than {current_players} players and are hidden.")
+                st.caption(f"{hidden_count} hidden (need more players).")
             if qa_drill is not None:
                 required = parse_required_players(qa_drill["n"])
                 sizes = pitch_size_options(required)
                 if sizes:
                     size_text = " / ".join(f"{label} {dims}" for label, dims in sizes)
-                    st.caption(f"Suggested pitch size (estimated from {required} players): {size_text}")
+                    st.caption(f"Pitch size (~{required} players): {size_text}")
         with qa3:
             st.write("")
             st.write("")
@@ -381,8 +392,11 @@ with summary_col:
     mins = intensity_minutes(live_session)
 
     m1, m2 = st.columns(2)
-    m1.metric("Duration", f"{dur} min")
-    m2.metric("Dynamic Stress Load", f"{dsl} a.u.")
+    with m1:
+        st.metric("Duration", f"{dur} min")
+        render_target_note(dur, info.get("duration"))
+    with m2:
+        st.metric("Dynamic Stress Load", f"{dsl} a.u.")
     st.markdown(stacked_bar_html(mins), unsafe_allow_html=True)
     st.caption("🟢 Low  🟠 Medium  🔴 High")
 
@@ -396,5 +410,4 @@ with summary_col:
         chart_rows.append({"Day": d.strftime("%a"), "DSL": session_load(s)})
     chart_df = pd.DataFrame(chart_rows).set_index("Day")
     st.bar_chart(chart_df, height=200)
-    st.caption("Dynamic Stress Load estimated as duration × intensity tier (2 / 4 / 7) "
-               "until synced with GPS session data.")
+    st.caption("DSL = duration × intensity tier (2/4/7), until GPS data is synced.")
