@@ -73,14 +73,6 @@ def session_load(session):
                for b in session.get("blocks", []))
 
 
-def intensity_minutes(session):
-    m = {"Low": 0, "Medium": 0, "High": 0}
-    for b in session.get("blocks", []):
-        if b.get("intensity") in m:
-            m[b["intensity"]] += int(b.get("duration") or 0)
-    return m
-
-
 def drills_for_zone(zone):
     return [d for d in DRILL_LIBRARY if d["c"] == zone]
 
@@ -141,22 +133,6 @@ def drills_for_zone_and_players(zone, players):
         else:
             hidden += 1
     return visible, hidden
-
-
-def stacked_bar_html(mins):
-    total = sum(mins.values())
-    colors = {"Low": "#3F8F68", "Medium": "#B97F1F", "High": "#B94433"}
-    if total <= 0:
-        segments = '<span style="width:100%;background:#DCD6C7"></span>'
-    else:
-        segments = "".join(
-            f'<span style="width:{mins[k] / total * 100:.1f}%;background:{colors[k]}"></span>'
-            for k in ("Low", "Medium", "High") if mins[k] > 0
-        )
-    return (
-        '<div style="height:10px;border-radius:5px;overflow:hidden;display:flex;background:#DCD6C7;">'
-        + segments + "</div>"
-    )
 
 
 # ---------------- session state defaults ----------------
@@ -395,7 +371,6 @@ with summary_col:
     live_session = db.get_session(sel_date_str) or blank_session(sel_date_str, fixtures)
     dur = session_duration(live_session)
     dsl = session_load(live_session)
-    mins = intensity_minutes(live_session)
 
     m1, m2 = st.columns(2)
     with m1:
@@ -403,17 +378,4 @@ with summary_col:
         render_target_note(dur, info.get("duration"))
     with m2:
         st.metric("Dynamic Stress Load", f"{dsl} a.u.")
-    st.markdown(stacked_bar_html(mins), unsafe_allow_html=True)
-    st.caption("🟢 Low  🟠 Medium  🔴 High")
-
-    st.markdown("#### Week DSL")
-    chart_rows = []
-    for d in week_dates:
-        ds = d.isoformat()
-        s = week_sessions.get(ds) or blank_session(ds, fixtures)
-        if ds == sel_date_str:
-            s = live_session
-        chart_rows.append({"Day": d.strftime("%a"), "DSL": session_load(s)})
-    chart_df = pd.DataFrame(chart_rows).set_index("Day")
-    st.bar_chart(chart_df, height=200)
     st.caption("DSL = duration × intensity tier (2/4/7), until GPS data is synced.")
