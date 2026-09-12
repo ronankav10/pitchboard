@@ -30,8 +30,10 @@ need Claude to run.
    about a minute — same URL, no redeploy steps needed on your end.
 
 ## Features currently in the app
-- Season fixture calendar (date, opponent, competition, venue) with a
-  season-phase selector (Build / Maintain / Recover)
+- Season fixture calendar (date, opponent, competition, venue) on its own
+  **Fixtures** page (in the sidebar page nav) — seeded with Parma Calcio
+  1913's full 38-match Serie A 2026-27 calendar (`data/fixtures_2026_27.json`),
+  with a one-click reload if it ever needs resetting to the official list
 - Automatic day-code labelling for every date (MD-4…MD+2) from its gap to
   the nearest fixture, with the upcoming match taking priority over a
   previous one in a congested week — any single day can be overridden

@@ -85,6 +85,19 @@ def delete_fixture(fixture_id):
         conn.execute("DELETE FROM fixtures WHERE id = ?", (fixture_id,))
 
 
+def replace_all_fixtures(fixture_list):
+    """
+    Wipe the fixtures table and reload it from `fixture_list` -- dicts with
+    date/opponent/competition/venue. Used to (re)load a season's official
+    calendar; every day-code in the planner is recomputed live from
+    whatever's in this table, so this is safe to call any time.
+    """
+    with get_conn() as conn:
+        conn.execute("DELETE FROM fixtures")
+    for f in fixture_list:
+        add_fixture(f["date"], f["opponent"], f.get("competition"), f.get("venue"))
+
+
 # ---------------- sessions ----------------
 
 def get_session(date_str):
@@ -152,20 +165,15 @@ def set_meta(key, value):
 # ---------------- demo seed data ----------------
 
 def seed_if_empty():
-    """Populate a realistic demo week the first time the app runs, so it's
-    not a blank page. Safe to call every startup -- it's a no-op once any
-    fixture exists."""
+    """Populate the fixture calendar and a demo week of sessions the first
+    time the app runs, so it's not a blank page. Safe to call every
+    startup -- it's a no-op once any fixture exists."""
     if list_fixtures():
         return
 
-    fixtures = [
-        ("2026-09-06", "Ashfield Rovers", "Championship", "Home"),
-        ("2026-09-13", "Riverside Town", "Championship", "Away"),
-        ("2026-09-16", "Colchester Athletic", "League Cup", "Home"),
-        ("2026-09-20", "Brackworth United", "Championship", "Away"),
-    ]
-    for f in fixtures:
-        add_fixture(*f)
+    fixtures_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "fixtures_2026_27.json")
+    with open(fixtures_path) as f:
+        replace_all_fixtures(json.load(f))
 
     def blk(name, zone, duration, intensity, notes=""):
         return {"id": str(uuid.uuid4())[:8], "name": name, "zone": zone, "duration": duration,
@@ -202,15 +210,15 @@ def seed_if_empty():
             blk("Positioning Exercise 1", "Tactical", 15, "Low", "Press triggers vs. opposition shape"),
             blk("Shooting Drill 9", "Technical", 10, "Medium"),
         ], {"td": "4.3", "hsr": "90", "sprint": "25", "explosive": "8"}),
-        "2026-09-13": ("Match", "Championship — away at Riverside Town", [
+        "2026-09-13": ("Match", "Example match day — away fixture", [
             blk("Warm Up Cross", "Warm Up", 25, "Medium"),
             blk("Match", "Match", 90, "High"),
         ], {"td": "", "hsr": "", "sprint": "", "explosive": ""}),
-        "2026-09-16": ("Match", "League Cup — home vs Colchester Athletic", [
+        "2026-09-16": ("Match", "Example match day — home cup fixture", [
             blk("Warm Up Cross", "Warm Up", 20, "Medium"),
             blk("Match", "Match", 90, "High"),
         ], {"td": "", "hsr": "", "sprint": "", "explosive": ""}),
-        "2026-09-17": ("Rondo & Positional Play", "Cup turnaround — straight back into MD-3 prep, no recovery day available before Sunday", [
+        "2026-09-17": ("Rondo & Positional Play", "Example of a compressed turnaround — straight back into MD-3 prep, no recovery day available before the next match", [
             blk("Warm Up 4 Lanes", "Warm Up", 10, "Low"),
             blk("Possession Drill 64 (8 v 8 - 4 Goals)", "Possession", 22, "High", "Full pitch"),
             blk("Game 14 (8 v 8 - 6 Goals)", "Games", 16, "High"),

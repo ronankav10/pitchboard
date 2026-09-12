@@ -18,7 +18,7 @@ import db
 import dayrules
 from constants import (
     DAY_CODES, SESSION_TYPES, ZONES, INTENSITIES,
-    INTENSITY_FACTOR, SEASON_PHASES, DAY_TYPE_INFO, GENERIC_DAY_INFO,
+    INTENSITY_FACTOR, DAY_TYPE_INFO, GENERIC_DAY_INFO,
     parse_required_players, pitch_size_options,
 )
 
@@ -126,56 +126,14 @@ if "selected_date" not in st.session_state:
     st.session_state.selected_date = date.today().isoformat()
 
 
-# ---------------- sidebar: season phase + fixtures ----------------
+# ---------------- sidebar ----------------
 
 with st.sidebar:
     st.markdown("## ⚽ Pitchboard")
     st.caption("Microcycle & session planning")
+    st.caption("Manage the season calendar on the **Fixtures** page (above).")
 
-    phase = st.selectbox(
-        "Season phase", SEASON_PHASES,
-        index=SEASON_PHASES.index(db.get_meta("season_phase", "Maintain"))
-        if db.get_meta("season_phase", "Maintain") in SEASON_PHASES else 1,
-        key="season_phase_select",
-    )
-    if phase != db.get_meta("season_phase", "Maintain"):
-        db.set_meta("season_phase", phase)
-
-    st.divider()
-    st.markdown("### Season fixtures")
-    st.caption(
-        "Add each match once — every day in the planner is labelled automatically "
-        "(MD-4…MD+2) from its gap to the nearest fixture. In a congested run, taper "
-        "into the next match takes priority over recovery from the last one, so "
-        "recovery days get compressed or skipped — override any single day in the "
-        "builder if you'd rather call it differently."
-    )
-    with st.form("add_fixture_form", clear_on_submit=True):
-        fx_date = st.date_input("Match date", value=None, format="YYYY-MM-DD")
-        fx_opponent = st.text_input("Opponent")
-        fx_competition = st.text_input("Competition")
-        fx_venue = st.selectbox("Venue", ["Home", "Away"])
-        submitted = st.form_submit_button("Add fixture")
-        if submitted and fx_date and fx_opponent:
-            db.add_fixture(fx_date.isoformat(), fx_opponent, fx_competition, fx_venue)
-            st.rerun()
-
-    fixtures = db.list_fixtures()
-    today_str = date.today().isoformat()
-    for fxr in fixtures:
-        past = fxr["date"] < today_str
-        cols = st.columns([5, 1])
-        with cols[0]:
-            label = f"{fxr['date']} — {fxr['opponent']} ({fxr['venue']})"
-            if fxr.get("competition"):
-                label += f" · {fxr['competition']}"
-            st.markdown(f"{'~~' if past else ''}{label}{'~~' if past else ''}")
-        with cols[1]:
-            if st.button("✕", key=f"del_fx_{fxr['id']}"):
-                db.delete_fixture(fxr["id"])
-                st.rerun()
-
-fixtures = db.list_fixtures()  # refresh after any sidebar mutation
+fixtures = db.list_fixtures()
 
 
 # ---------------- week navigation ----------------
