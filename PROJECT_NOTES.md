@@ -44,6 +44,11 @@ need Claude to run.
   Calcio 1913's "Performance Science – Coaching Framework" (15/07/2025)
 - Estimated training load fields (TD / HSR / sprint distance / explosive
   distance) per session, plus a week summary with a duration/DSL chart
+- "Players available" field per session that filters the drill-library
+  picker to drills that fit your headcount (parsed from the drill name,
+  e.g. "6 v 6 w 2 N" needs 14) — drills without a parseable player count
+  (most warm-ups, individual technical work, conditioning circuits) always
+  stay visible regardless
 
 ## Data storage
 Everything lives in a single SQLite file, `pitchboard.db`, created next to
