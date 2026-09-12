@@ -214,7 +214,7 @@ session = db.get_session(sel_date_str) or blank_session(sel_date_str, fixtures)
 code, fixture, is_auto = dayrules.effective_code(sel_date, session, fixtures)
 info = DAY_TYPE_INFO.get(code, GENERIC_DAY_INFO)
 
-main_col, summary_col = st.columns([3, 1])
+main_col = st.container()
 
 with main_col:
     st.markdown(f"## {dayrules.fmt_day_header(sel_date)} · {code or 'General / Build day'}")
@@ -365,10 +365,3 @@ with main_col:
                 st.session_state[editor_version_key] += 1
                 st.rerun()
 
-with summary_col:
-    st.markdown("### Session summary")
-    live_session = db.get_session(sel_date_str) or blank_session(sel_date_str, fixtures)
-    dur = session_duration(live_session)
-
-    st.metric("Duration", f"{dur} min")
-    render_target_note(dur, info.get("duration"))
