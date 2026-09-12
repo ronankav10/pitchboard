@@ -45,7 +45,7 @@ need Claude to run.
   targets, avoid-list, and suggested drill zones — condensed from Parma
   Calcio 1913's "Performance Science – Coaching Framework" (15/07/2025)
 - Estimated training load fields (TD / HSR / sprint distance / explosive
-  distance) per session, plus a week summary with a duration/DSL chart
+  distance) per session, with a Session summary showing duration
 - "Players available" field per session that filters the drill-library
   picker to drills that fit your headcount (parsed from the drill name,
   e.g. "6 v 6 w 2 N" needs 14) — drills without a parseable player count

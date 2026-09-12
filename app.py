@@ -19,7 +19,7 @@ import db
 import dayrules
 from constants import (
     DAY_CODES, SESSION_TYPES, ZONES, INTENSITIES,
-    INTENSITY_FACTOR, DAY_TYPE_INFO, GENERIC_DAY_INFO,
+    DAY_TYPE_INFO, GENERIC_DAY_INFO,
     parse_required_players, pitch_size_options,
 )
 
@@ -66,11 +66,6 @@ def save_session_field(date_str, fixtures, **patch):
 
 def session_duration(session):
     return sum(int(b.get("duration") or 0) for b in session.get("blocks", []))
-
-
-def session_load(session):
-    return sum(int(b.get("duration") or 0) * INTENSITY_FACTOR.get(b.get("intensity"), 0)
-               for b in session.get("blocks", []))
 
 
 def drills_for_zone(zone):
@@ -370,12 +365,6 @@ with summary_col:
     st.markdown("### Session summary")
     live_session = db.get_session(sel_date_str) or blank_session(sel_date_str, fixtures)
     dur = session_duration(live_session)
-    dsl = session_load(live_session)
 
-    m1, m2 = st.columns(2)
-    with m1:
-        st.metric("Duration", f"{dur} min")
-        render_target_note(dur, info.get("duration"))
-    with m2:
-        st.metric("Dynamic Stress Load", f"{dsl} a.u.")
-    st.caption("DSL = duration × intensity tier (2/4/7), until GPS data is synced.")
+    st.metric("Duration", f"{dur} min")
+    render_target_note(dur, info.get("duration"))

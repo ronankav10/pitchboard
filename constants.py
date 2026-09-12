@@ -37,8 +37,6 @@ ZONES = ["Warm Up", "Conditioning", "Technical", "Possession", "Tactical", "Game
 
 INTENSITIES = ["Low", "Medium", "High"]
 
-INTENSITY_FACTOR = {"Low": 2, "Medium": 4, "High": 7}
-
 SEASON_PHASES = ["Build", "Maintain", "Recover"]
 
 DAY_TYPE_INFO = {
