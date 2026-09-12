@@ -37,6 +37,15 @@ def fmt_week_range(week_start: date) -> str:
     return f"{a.day} {a.strftime('%b')} – {b.day} {b.strftime('%b')} {b.year}"
 
 
+def fmt_date_range(a: date, b: date) -> str:
+    """Same formatting as fmt_week_range, but for any two dates -- used
+    for the rolling N-day window in the planner, which isn't Monday-
+    anchored the way a calendar week is."""
+    if a.month == b.month:
+        return f"{a.day}–{b.day} {a.strftime('%b')} {a.year}"
+    return f"{a.day} {a.strftime('%b')} – {b.day} {b.strftime('%b')} {b.year}"
+
+
 def compute_day_code(d: date, fixtures: list[dict]):
     """
     fixtures: list of dicts with a 'date' key holding a date object (or

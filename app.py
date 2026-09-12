@@ -132,8 +132,10 @@ def drills_for_zone_and_players(zone, players):
 
 # ---------------- session state defaults ----------------
 
-if "week_start" not in st.session_state:
-    st.session_state.week_start = dayrules.monday_of(date.today())
+WINDOW_SIZE = 5
+
+if "window_start" not in st.session_state:
+    st.session_state.window_start = date.today()
 if "selected_date" not in st.session_state:
     st.session_state.selected_date = date.today().isoformat()
 
@@ -150,28 +152,29 @@ fixtures = db.list_fixtures()
 
 # ---------------- week navigation ----------------
 
+week_dates = [st.session_state.window_start + timedelta(days=i) for i in range(WINDOW_SIZE)]
+
 nav_cols = st.columns([1, 3, 1, 1])
 with nav_cols[0]:
-    if st.button("‹ Prev week", use_container_width=True):
-        st.session_state.week_start -= timedelta(days=7)
+    if st.button("‹ Prev 5 days", use_container_width=True):
+        st.session_state.window_start -= timedelta(days=WINDOW_SIZE)
         st.rerun()
 with nav_cols[1]:
-    st.markdown(f"### {dayrules.fmt_week_range(st.session_state.week_start)}")
+    st.markdown(f"### {dayrules.fmt_date_range(week_dates[0], week_dates[-1])}")
 with nav_cols[2]:
-    if st.button("Next week ›", use_container_width=True):
-        st.session_state.week_start += timedelta(days=7)
+    if st.button("Next 5 days ›", use_container_width=True):
+        st.session_state.window_start += timedelta(days=WINDOW_SIZE)
         st.rerun()
 with nav_cols[3]:
     if st.button("Today", use_container_width=True):
-        st.session_state.week_start = dayrules.monday_of(date.today())
+        st.session_state.window_start = date.today()
         st.session_state.selected_date = date.today().isoformat()
         st.rerun()
 
-week_dates = dayrules.week_dates(st.session_state.week_start)
 week_date_strs = [d.isoformat() for d in week_dates]
 week_sessions = db.list_sessions_between(week_date_strs[0], week_date_strs[-1])
 
-day_cols = st.columns(7)
+day_cols = st.columns(WINDOW_SIZE)
 for i, d in enumerate(week_dates):
     ds = d.isoformat()
     session = week_sessions.get(ds) or blank_session(ds, fixtures)
