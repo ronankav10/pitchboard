@@ -34,23 +34,31 @@ need Claude to run.
   **Fixtures** page (in the sidebar page nav) — seeded with Parma Calcio
   1913's full 38-match Serie A 2026-27 calendar (`data/fixtures_2026_27.json`),
   with a one-click reload if it ever needs resetting to the official list
+- A day-by-day "Season calendar" on the Fixtures page covering every day
+  from today through the season, with an In/Off dropdown per day so you
+  can block out rest days without opening each one in the planner (match
+  days are automatic and can't be toggled there)
 - Automatic day-code labelling for every date (MD-4…MD+2) from its gap to
   the nearest fixture, with the upcoming match taking priority over a
   previous one in a congested week — any single day can be overridden
   by hand
-- Week view with day cards, a session builder (type, notes, drag-free
-  block list via a data table), and a "quick add from drill library"
-  picker (556 drills carried over from your Drill Profiles folders)
-- "Key things to manipulate" reference panel per day-type: aim, numeric
-  targets, avoid-list, and suggested drill zones — condensed from Parma
-  Calcio 1913's "Performance Science – Coaching Framework" (15/07/2025)
+- Rolling 5-day view (starting today, paged with Prev/Next/Today) with day
+  cards and a session builder: a day-type override, a Coaching focus field,
+  a Physical focus field, block list via a data table, and a "quick add
+  from drill library" picker (556 drills carried over from your Drill
+  Profiles folders) — there's no manual "session type" dropdown anymore,
+  it's computed automatically from the day code (or set to "Off" via the
+  Fixtures page)
 - Estimated training load fields (TD / HSR / sprint distance / explosive
-  distance) per session, with a Session summary showing duration
+  distance) per session, with the TD/HSR/Duration numbers turning red if
+  they exceed the day-type's recommended target by more than 25%
 - "Players available" field per session that filters the drill-library
   picker to drills that fit your headcount (parsed from the drill name,
   e.g. "6 v 6 w 2 N" needs 14) — drills without a parseable player count
   (most warm-ups, individual technical work, conditioning circuits) always
   stay visible regardless
+- Pitch-size suggestions (compact/expanded estimates, not measured data)
+  shown alongside each drill based on the players it needs
 - **Drill Library** page — browse all 555 drill diagrams by category, with
   search; the quick-add picker on the main page also shows a thumbnail of
   whatever drill is selected. Images are re-encoded JPEGs (~24MB total,

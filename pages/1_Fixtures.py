@@ -31,6 +31,7 @@ def set_in_off(date_str, fixtures, code, off):
             date_str, new_type, current["day_notes"], current["blocks"],
             current["load"], current.get("day_code_override"),
             players=current.get("players", 0),
+            physical_focus=current.get("physical_focus", ""),
         )
     else:
         db.upsert_session(date_str, new_type, "", [], dict(EMPTY_LOAD), None)

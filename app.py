@@ -18,7 +18,7 @@ import streamlit as st
 import db
 import dayrules
 from constants import (
-    DAY_CODES, SESSION_TYPES, ZONES, INTENSITIES,
+    DAY_CODES, ZONES, INTENSITIES,
     DAY_TYPE_INFO, GENERIC_DAY_INFO,
     parse_required_players, pitch_size_options,
 )
@@ -47,6 +47,7 @@ def blank_session(date_str, fixtures):
         "date": date_str,
         "session_type": dayrules.default_session_type(code),
         "day_notes": "",
+        "physical_focus": "",
         "blocks": [],
         "load": dict(EMPTY_LOAD),
         "day_code_override": None,
@@ -61,6 +62,7 @@ def save_session_field(date_str, fixtures, **patch):
         date_str, merged["session_type"], merged["day_notes"],
         merged["blocks"], merged["load"], merged.get("day_code_override"),
         players=merged.get("players", 0),
+        physical_focus=merged.get("physical_focus", ""),
     )
 
 
@@ -228,14 +230,7 @@ with main_col:
     if fixture_note:
         st.caption(fixture_note)
 
-    f1, f2, f3, f4 = st.columns([1.3, 1.1, 1.6, 1])
-    with f1:
-        st_type = st.selectbox(
-            "Session type", SESSION_TYPES,
-            index=SESSION_TYPES.index(session["session_type"]) if session["session_type"] in SESSION_TYPES else 0,
-            key=f"type_{sel_date_str}",
-            on_change=lambda: save_session_field(sel_date_str, fixtures, session_type=st.session_state[f"type_{sel_date_str}"]),
-        )
+    f2, f3, f3b, f4 = st.columns([1.1, 1.4, 1.4, 1])
     with f2:
         override_options = [""] + DAY_CODES
         current_override = session.get("day_code_override") or ""
@@ -251,6 +246,12 @@ with main_col:
             "Coaching focus", value=session["day_notes"],
             key=f"notes_{sel_date_str}",
             on_change=lambda: save_session_field(sel_date_str, fixtures, day_notes=st.session_state[f"notes_{sel_date_str}"]),
+        )
+    with f3b:
+        st_physical = st.text_input(
+            "Physical focus", value=session.get("physical_focus", ""),
+            key=f"physical_{sel_date_str}",
+            on_change=lambda: save_session_field(sel_date_str, fixtures, physical_focus=st.session_state[f"physical_{sel_date_str}"]),
         )
     with f4:
         st_players = st.number_input(

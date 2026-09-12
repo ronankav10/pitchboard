@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS sessions (
     blocks TEXT,
     load TEXT,
     day_code_override TEXT,
-    players INTEGER
+    players INTEGER,
+    physical_focus TEXT
 );
 
 CREATE TABLE IF NOT EXISTS meta (
@@ -62,6 +63,8 @@ def init_db():
         cols = {row["name"] for row in conn.execute("PRAGMA table_info(sessions)")}
         if "players" not in cols:
             conn.execute("ALTER TABLE sessions ADD COLUMN players INTEGER")
+        if "physical_focus" not in cols:
+            conn.execute("ALTER TABLE sessions ADD COLUMN physical_focus TEXT")
 
 
 # ---------------- fixtures ----------------
@@ -109,24 +112,26 @@ def get_session(date_str):
         d["blocks"] = json.loads(d["blocks"]) if d["blocks"] else []
         d["load"] = json.loads(d["load"]) if d["load"] else {"td": "", "hsr": "", "sprint": "", "explosive": ""}
         d["players"] = d.get("players") or 0
+        d["physical_focus"] = d.get("physical_focus") or ""
         return d
 
 
-def upsert_session(date_str, session_type, day_notes, blocks, load, day_code_override, players=0):
+def upsert_session(date_str, session_type, day_notes, blocks, load, day_code_override, players=0, physical_focus=""):
     with get_conn() as conn:
         conn.execute(
             """
-            INSERT INTO sessions (date, session_type, day_notes, blocks, load, day_code_override, players)
-            VALUES (?,?,?,?,?,?,?)
+            INSERT INTO sessions (date, session_type, day_notes, blocks, load, day_code_override, players, physical_focus)
+            VALUES (?,?,?,?,?,?,?,?)
             ON CONFLICT(date) DO UPDATE SET
                 session_type=excluded.session_type,
                 day_notes=excluded.day_notes,
                 blocks=excluded.blocks,
                 load=excluded.load,
                 day_code_override=excluded.day_code_override,
-                players=excluded.players
+                players=excluded.players,
+                physical_focus=excluded.physical_focus
             """,
-            (date_str, session_type, day_notes, json.dumps(blocks), json.dumps(load), day_code_override, players or 0),
+            (date_str, session_type, day_notes, json.dumps(blocks), json.dumps(load), day_code_override, players or 0, physical_focus or ""),
         )
 
 
@@ -141,6 +146,7 @@ def list_sessions_between(start_str, end_str):
             d["blocks"] = json.loads(d["blocks"]) if d["blocks"] else []
             d["load"] = json.loads(d["load"]) if d["load"] else {"td": "", "hsr": "", "sprint": "", "explosive": ""}
             d["players"] = d.get("players") or 0
+            d["physical_focus"] = d.get("physical_focus") or ""
             out[d["date"]] = d
         return out
 
