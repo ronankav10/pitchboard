@@ -19,7 +19,7 @@ import dayrules
 from constants import (
     DAY_CODES, SESSION_TYPES, ZONES, INTENSITIES,
     INTENSITY_FACTOR, SEASON_PHASES, DAY_TYPE_INFO, GENERIC_DAY_INFO,
-    parse_required_players,
+    parse_required_players, pitch_size_options,
 )
 
 st.set_page_config(page_title="Pitchboard", page_icon="⚽", layout="wide")
@@ -396,6 +396,12 @@ with main_col:
                     st.caption("No drills in the library for this category yet — type a name straight into the table instead.")
             if options and hidden_count:
                 st.caption(f"{hidden_count} more in this category need more than {current_players} players and are hidden.")
+            if qa_drill is not None:
+                required = parse_required_players(qa_drill["n"])
+                sizes = pitch_size_options(required)
+                if sizes:
+                    size_text = " / ".join(f"{label} {dims}" for label, dims in sizes)
+                    st.caption(f"Suggested pitch size (estimated from {required} players): {size_text}")
         with qa3:
             st.write("")
             st.write("")

@@ -166,3 +166,37 @@ def parse_required_players(drill_name: str):
     total = sum(int(n) for n in _V_NUM_RE.findall(chain.group(0)))
     total += sum(int(n) for n in _EXTRA_RE.findall(text))
     return total
+
+
+# ---------------- pitch-size guidance ----------------
+#
+# The source drill diagrams don't have dimensions labelled on them, so
+# this isn't measured per drill -- it's a standard small-sided-game sizing
+# table (the general "smaller area = more technical/pressing, larger area
+# = more physical/HSR" principle used across academy sport science), keyed
+# off the same player count parsed above. Two options per band, since the
+# right size is a coaching choice, not a fixed answer.
+
+PITCH_SIZE_BANDS = [
+    (0, 4, [("Compact", "10 x 15m"), ("Expanded", "15 x 20m")]),
+    (5, 8, [("Compact", "20 x 15m"), ("Expanded", "30 x 20m")]),
+    (9, 12, [("Compact", "30 x 20m"), ("Expanded", "40 x 30m")]),
+    (13, 16, [("Compact", "50 x 35m"), ("Expanded", "60 x 40m")]),
+    (17, 20, [("Compact", "70 x 45m"), ("Expanded", "80 x 55m")]),
+    (21, 9999, [("Full pitch", "100-110 x 64-75m")]),
+]
+
+
+def pitch_size_options(total_players):
+    """
+    Two (or one, for 21+) suggested pitch-size options for a given total
+    player count, e.g. 14 -> [("Compact", "50 x 35m"), ("Expanded", "60 x 40m")].
+    Returns None when total_players is None -- same drills that have no
+    parseable player count also have no basis for a pitch-size estimate.
+    """
+    if total_players is None:
+        return None
+    for lo, hi, options in PITCH_SIZE_BANDS:
+        if lo <= total_players <= hi:
+            return options
+    return None
