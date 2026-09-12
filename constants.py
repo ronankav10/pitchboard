@@ -130,3 +130,39 @@ GENERIC_DAY_INFO = {
     "avoid": [],
     "suggested_zones": ["Conditioning", "Technical", "Possession"],
 }
+
+
+# ---------------- player-count filtering ----------------
+
+import re
+
+_V_CHAIN_RE = re.compile(r"\d+(?:\s*v\s*\d+)+", re.IGNORECASE)
+_V_NUM_RE = re.compile(r"\d+")
+_EXTRA_RE = re.compile(r"(\d+)\s*(?:N|GK|Out)\b", re.IGNORECASE)
+
+
+def parse_required_players(drill_name: str):
+    """
+    Best-effort estimate of how many players a drill needs, parsed from its
+    name -- e.g. "Possession Drill 7 (6 v 6 w 2 N & 2 GK)" -> 16. Looks at
+    the parenthesised group description if there is one (so a drill number
+    like "Drill 78" is never mistaken for a player count), sums every
+    number in a "N v N (v N...)" chain, then adds any extra bodies called
+    out as neutrals/keepers/rotation players ("2 N", "1 GK", "4 Out") --
+    but not numbers attached to other nouns like "2 Goals" or "3 Zones".
+
+    Returns None when the name has no parseable player count -- most
+    warm-ups, individual technical work, and conditioning circuits, which
+    aren't tied to a fixed squad size and should never be filtered out by
+    a player-count limit.
+    """
+    m = re.search(r"\(([^)]*)\)", drill_name)
+    text = m.group(1) if m else drill_name
+
+    chain = _V_CHAIN_RE.search(text)
+    if not chain:
+        return None
+
+    total = sum(int(n) for n in _V_NUM_RE.findall(chain.group(0)))
+    total += sum(int(n) for n in _EXTRA_RE.findall(text))
+    return total

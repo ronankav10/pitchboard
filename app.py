@@ -19,6 +19,7 @@ import dayrules
 from constants import (
     DAY_CODES, SESSION_TYPES, ZONES, INTENSITIES,
     INTENSITY_FACTOR, SEASON_PHASES, DAY_TYPE_INFO, GENERIC_DAY_INFO,
+    parse_required_players,
 )
 
 st.set_page_config(page_title="Pitchboard", page_icon="⚽", layout="wide")
@@ -45,6 +46,7 @@ def blank_session(date_str, fixtures):
         "blocks": [],
         "load": dict(EMPTY_LOAD),
         "day_code_override": None,
+        "players": 0,
     }
 
 
@@ -54,6 +56,7 @@ def save_session_field(date_str, fixtures, **patch):
     db.upsert_session(
         date_str, merged["session_type"], merged["day_notes"],
         merged["blocks"], merged["load"], merged.get("day_code_override"),
+        players=merged.get("players", 0),
     )
 
 
@@ -76,6 +79,27 @@ def intensity_minutes(session):
 
 def drills_for_zone(zone):
     return [d for d in DRILL_LIBRARY if d["c"] == zone]
+
+
+def drills_for_zone_and_players(zone, players):
+    """
+    Drills in this zone that fit the number of players available.
+    `players` <= 0 means "not set" -- no filtering, show everything.
+    Returns (visible_drills, hidden_count) -- hidden_count is how many
+    drills in this zone were left out because they need more players than
+    are available, so the picker can say so.
+    """
+    all_drills = drills_for_zone(zone)
+    if not players or players <= 0:
+        return all_drills, 0
+    visible, hidden = [], 0
+    for d in all_drills:
+        required = parse_required_players(d["n"])
+        if required is None or required <= players:
+            visible.append(d)
+        else:
+            hidden += 1
+    return visible, hidden
 
 
 def stacked_bar_html(mins):
@@ -231,7 +255,7 @@ with main_col:
     if fixture_note:
         st.caption(fixture_note)
 
-    f1, f2, f3 = st.columns(3)
+    f1, f2, f3, f4 = st.columns([1.3, 1.1, 1.6, 1])
     with f1:
         st_type = st.selectbox(
             "Session type", SESSION_TYPES,
@@ -254,6 +278,14 @@ with main_col:
             "Coaching focus", value=session["day_notes"],
             key=f"notes_{sel_date_str}",
             on_change=lambda: save_session_field(sel_date_str, fixtures, day_notes=st.session_state[f"notes_{sel_date_str}"]),
+        )
+    with f4:
+        st_players = st.number_input(
+            "Players available", min_value=0, step=1,
+            value=int(session.get("players") or 0),
+            key=f"players_{sel_date_str}",
+            help="Used to filter the drill-library picker below. Leave at 0 to see the whole library.",
+            on_change=lambda: save_session_field(sel_date_str, fixtures, players=st.session_state[f"players_{sel_date_str}"]),
         )
 
     with st.expander(f"Key things to manipulate — {code or 'General'}", expanded=True):
@@ -337,20 +369,33 @@ with main_col:
         session["blocks"] = new_blocks
 
     with st.expander("Quick add from drill library"):
+        current_players = int(session.get("players") or 0)
+        if current_players > 0:
+            st.caption(f"Filtered to drills that fit {current_players} players — set \"Players available\" to 0 above to see everything.")
         qa1, qa2, qa3 = st.columns([1, 2, 1])
         with qa1:
             qa_zone = st.selectbox("Category", ZONES, key=f"qa_zone_{sel_date_str}")
-        options = drills_for_zone(qa_zone)
+        options, hidden_count = drills_for_zone_and_players(qa_zone, current_players)
         with qa2:
             if options:
                 qa_drill = st.selectbox(
                     "Drill", options,
-                    format_func=lambda d: f"{d['s']} — {d['n']}" if d.get("s") else d["n"],
-                    key=f"qa_drill_{sel_date_str}_{qa_zone}",
+                    format_func=lambda d: (
+                        f"{d['s']} — {d['n']}" if d.get("s") else d["n"]
+                    ) + (
+                        f"  ({parse_required_players(d['n'])} players)"
+                        if parse_required_players(d["n"]) is not None else ""
+                    ),
+                    key=f"qa_drill_{sel_date_str}_{qa_zone}_{current_players}",
                 )
             else:
                 qa_drill = None
-                st.caption("No drills in the library for this category yet — type a name straight into the table instead.")
+                if hidden_count:
+                    st.caption(f"All {hidden_count} drills in this category need more than {current_players} players — raise the count above or type a name straight into the table instead.")
+                else:
+                    st.caption("No drills in the library for this category yet — type a name straight into the table instead.")
+            if options and hidden_count:
+                st.caption(f"{hidden_count} more in this category need more than {current_players} players and are hidden.")
         with qa3:
             st.write("")
             st.write("")

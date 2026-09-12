@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS sessions (
     day_notes TEXT,
     blocks TEXT,
     load TEXT,
-    day_code_override TEXT
+    day_code_override TEXT,
+    players INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS meta (
@@ -54,6 +55,13 @@ def get_conn():
 def init_db():
     with get_conn() as conn:
         conn.executescript(SCHEMA)
+        # Migration: "players" was added after the original sessions table.
+        # ALTER TABLE ... ADD COLUMN has no "IF NOT EXISTS" in SQLite, so
+        # check first -- this keeps existing local pitchboard.db files
+        # (created before this feature existed) working without a reset.
+        cols = {row["name"] for row in conn.execute("PRAGMA table_info(sessions)")}
+        if "players" not in cols:
+            conn.execute("ALTER TABLE sessions ADD COLUMN players INTEGER")
 
 
 # ---------------- fixtures ----------------
@@ -87,23 +95,25 @@ def get_session(date_str):
         d = dict(row)
         d["blocks"] = json.loads(d["blocks"]) if d["blocks"] else []
         d["load"] = json.loads(d["load"]) if d["load"] else {"td": "", "hsr": "", "sprint": "", "explosive": ""}
+        d["players"] = d.get("players") or 0
         return d
 
 
-def upsert_session(date_str, session_type, day_notes, blocks, load, day_code_override):
+def upsert_session(date_str, session_type, day_notes, blocks, load, day_code_override, players=0):
     with get_conn() as conn:
         conn.execute(
             """
-            INSERT INTO sessions (date, session_type, day_notes, blocks, load, day_code_override)
-            VALUES (?,?,?,?,?,?)
+            INSERT INTO sessions (date, session_type, day_notes, blocks, load, day_code_override, players)
+            VALUES (?,?,?,?,?,?,?)
             ON CONFLICT(date) DO UPDATE SET
                 session_type=excluded.session_type,
                 day_notes=excluded.day_notes,
                 blocks=excluded.blocks,
                 load=excluded.load,
-                day_code_override=excluded.day_code_override
+                day_code_override=excluded.day_code_override,
+                players=excluded.players
             """,
-            (date_str, session_type, day_notes, json.dumps(blocks), json.dumps(load), day_code_override),
+            (date_str, session_type, day_notes, json.dumps(blocks), json.dumps(load), day_code_override, players or 0),
         )
 
 
@@ -117,6 +127,7 @@ def list_sessions_between(start_str, end_str):
             d = dict(r)
             d["blocks"] = json.loads(d["blocks"]) if d["blocks"] else []
             d["load"] = json.loads(d["load"]) if d["load"] else {"td": "", "hsr": "", "sprint": "", "explosive": ""}
+            d["players"] = d.get("players") or 0
             out[d["date"]] = d
         return out
 
