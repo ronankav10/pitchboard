@@ -55,12 +55,15 @@ plan to keep long-term, the two straightforward upgrades later are:
 
 ```
 app.py            Streamlit UI — week navigation, builder, summary
-pages/1_Fixtures.py  Season fixture calendar — its own page
+pages/1_Fixtures.py      Season fixture calendar — its own page
+pages/2_Drill_Library.py Browse drill diagrams by category, with search
 db.py             SQLite persistence (fixtures, sessions)
 dayrules.py       Day-code computation (MD-4…MD+2) and date helpers
 constants.py      Reference data — day-type aims/targets/avoid lists, zones, etc.
 data/drills.json  Your drill library (556 drills, from your Drill Profiles folders)
 data/fixtures_2026_27.json  Parma Calcio 1913's Serie A 2026-27 calendar
+data/drill_images/        Drill diagrams (JPEG, re-encoded small — ~24MB for 555)
+data/drill_images_manifest.json  Drill name -> image path lookup
 requirements.txt  Python dependencies
 .streamlit/config.toml   Colour theme
 ```

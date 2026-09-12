@@ -28,6 +28,9 @@ st.set_page_config(page_title="Pitchboard", page_icon="⚽", layout="wide")
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 with open(os.path.join(DATA_DIR, "drills.json")) as f:
     DRILL_LIBRARY = json.load(f)
+with open(os.path.join(DATA_DIR, "drill_images_manifest.json")) as f:
+    DRILL_IMAGE_MANIFEST = json.load(f)
+DRILL_IMAGE_ROOT = os.path.join(DATA_DIR, "drill_images")
 
 db.init_db()
 db.seed_if_empty()
@@ -371,6 +374,9 @@ with main_col:
                 if sizes:
                     size_text = " / ".join(f"{label} {dims}" for label, dims in sizes)
                     st.caption(f"Pitch size (~{required} players): {size_text}")
+                image_rel = DRILL_IMAGE_MANIFEST.get(qa_drill["n"])
+                if image_rel:
+                    st.image(os.path.join(DRILL_IMAGE_ROOT, image_rel), width=220)
         with qa3:
             st.write("")
             st.write("")

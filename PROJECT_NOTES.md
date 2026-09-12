@@ -51,6 +51,12 @@ need Claude to run.
   e.g. "6 v 6 w 2 N" needs 14) — drills without a parseable player count
   (most warm-ups, individual technical work, conditioning circuits) always
   stay visible regardless
+- **Drill Library** page — browse all 555 drill diagrams by category, with
+  search; the quick-add picker on the main page also shows a thumbnail of
+  whatever drill is selected. Images are re-encoded JPEGs (~24MB total,
+  down from ~146MB of source PNGs) pulled from your Liverpool Drill
+  Profiles folders — `data/drill_images_manifest.json` maps each drill
+  name to its image path.
 
 ## Data storage
 Everything lives in a single SQLite file, `pitchboard.db`, created next to
