@@ -61,7 +61,7 @@ db.py             SQLite persistence (fixtures, sessions)
 dayrules.py       Day-code computation (MD-4…MD+2) and date helpers
 constants.py      Reference data — day-type aims/targets/avoid lists, zones, etc.
 data/drills.json  Your drill library (556 drills, from your Drill Profiles folders)
-data/fixtures_2026_27.json  Parma Calcio 1913's Serie A 2026-27 calendar
+data/fixtures_demo.json     Club-neutral demo season (seeded on first run only)
 data/drill_images/        Drill diagrams (JPEG, re-encoded small — ~24MB for 555)
 data/drill_images_manifest.json  Drill name -> image path lookup
 requirements.txt  Python dependencies

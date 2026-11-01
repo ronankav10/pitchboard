@@ -51,7 +51,7 @@ with st.form("add_fixture_form", clear_on_submit=True):
     with c2:
         fx_opponent = st.text_input("Opponent")
     with c3:
-        fx_competition = st.text_input("Competition", value="Serie A")
+        fx_competition = st.text_input("Competition", value="League")
     with c4:
         fx_venue = st.selectbox("Venue", ["Home", "Away"])
     submitted = st.form_submit_button("Add fixture")
@@ -129,9 +129,48 @@ else:
             st.rerun()
 
 st.divider()
-with st.expander("Reload the official 2026-27 Serie A calendar"):
-    st.caption("Replaces the list above with the full official calendar — doesn't touch the week planner.")
-    if st.button("Reload from data/fixtures_2026_27.json"):
-        with open(os.path.join(DATA_DIR, "fixtures_2026_27.json")) as f:
-            db.replace_all_fixtures(json.load(f))
-        st.rerun()
+st.markdown("#### Manage the calendar")
+m1, m2, m3 = st.columns(3)
+with m1:
+    with st.expander("Import fixtures from CSV"):
+        st.caption(
+            "One row per match with columns **date, opponent, competition, venue** "
+            "(date as YYYY-MM-DD, venue Home or Away). Replaces the current list; "
+            "the week planner isn't touched."
+        )
+        up = st.file_uploader("Fixtures CSV", type=["csv"], label_visibility="collapsed")
+        if up is not None:
+            import pandas as pd
+            try:
+                fx = pd.read_csv(up)
+                fx.columns = [c.strip().lower() for c in fx.columns]
+                missing = {"date", "opponent"} - set(fx.columns)
+                if missing:
+                    st.error(f"Missing column(s): {', '.join(sorted(missing))}")
+                else:
+                    fx["date"] = pd.to_datetime(fx["date"], dayfirst=False).dt.date.astype(str)
+                    rows = [
+                        {"date": r["date"], "opponent": str(r["opponent"]).strip(),
+                         "competition": str(r.get("competition") or "").strip() or None,
+                         "venue": "Away" if str(r.get("venue", "")).strip().lower().startswith("a") else "Home"}
+                        for r in fx.fillna("").to_dict("records")
+                    ]
+                    st.caption(f"{len(rows)} fixtures found, {rows[0]['date']} to {rows[-1]['date']}.")
+                    if st.button(f"Replace calendar with these {len(rows)} fixtures"):
+                        db.replace_all_fixtures(rows)
+                        st.rerun()
+            except Exception as e:  # bad file -- show the reason rather than crash
+                st.error(f"Couldn't read that file: {e}")
+with m2:
+    with st.expander("Load the demo calendar"):
+        st.caption("A club-neutral 2026-27 season (38 league + 4 cup games) for trying the app out. Replaces the current list.")
+        if st.button("Load demo calendar"):
+            with open(os.path.join(DATA_DIR, "fixtures_demo.json")) as f:
+                db.replace_all_fixtures(json.load(f))
+            st.rerun()
+with m3:
+    with st.expander("Clear all fixtures"):
+        st.caption("Removes every fixture so you can start a new club's season. Planned sessions stay.")
+        if st.checkbox("Yes, clear them") and st.button("Clear fixtures"):
+            db.replace_all_fixtures([])
+            st.rerun()

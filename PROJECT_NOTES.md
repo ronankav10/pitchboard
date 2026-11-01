@@ -31,9 +31,12 @@ need Claude to run.
 
 ## Features currently in the app
 - Season fixture calendar (date, opponent, competition, venue) on its own
-  **Fixtures** page (in the sidebar page nav) — seeded with Parma Calcio
-  1913's full 38-match Serie A 2026-27 calendar (`data/fixtures_2026_27.json`),
-  with a one-click reload if it ever needs resetting to the official list
+  **Fixtures** page (in the sidebar page nav). Club-neutral: a fresh install
+  seeds a demo season (`data/fixtures_demo.json`, 38 league + 4 cup games vs
+  "Opposition 1…"). Under "Manage the calendar" you can import a new club's
+  fixtures from a CSV (date, opponent, competition, venue), reload the demo
+  season, or clear all fixtures. A cleared calendar stays empty — the demo
+  only seeds once, on a brand-new database
 - A day-by-day "Season calendar" on the Fixtures page covering every day
   from today through the season, with an In/Off dropdown per day so you
   can block out rest days without opening each one in the planner (match
@@ -52,7 +55,10 @@ need Claude to run.
 - Every drill has a short written description (set-up, action, focus) stored
   as the "d" field in `data/drills.json`, written from each diagram. It shows
   under the diagram in the quick-add picker and on the Drill Library page,
-  and the library search also matches description text (e.g. "pressing")
+  and the library search also matches description text (e.g. "pressing"). Edit any
+  description from the Drill Library page ("✏️ Edit description" under each
+  drill) — it saves straight into `data/drills.json`, so it's backed up on
+  your next git push
 - Estimated training load fields (TD / HSR / sprint distance / explosive
   distance) per session, with the TD/HSR/Duration numbers turning red if
   they exceed the day-type's recommended target by more than 25%

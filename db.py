@@ -174,10 +174,13 @@ def seed_if_empty():
     """Populate the fixture calendar and a demo week of sessions the first
     time the app runs, so it's not a blank page. Safe to call every
     startup -- it's a no-op once any fixture exists."""
+    if get_meta("seeded"):
+        return
     if list_fixtures():
+        set_meta("seeded", "1")  # existing database -- never seed it
         return
 
-    fixtures_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "fixtures_2026_27.json")
+    fixtures_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "fixtures_demo.json")
     with open(fixtures_path) as f:
         replace_all_fixtures(json.load(f))
 
@@ -234,3 +237,4 @@ def seed_if_empty():
         upsert_session(date_str, stype, notes, blocks, load, None)
 
     set_meta("season_phase", "Maintain")
+    set_meta("seeded", "1")
