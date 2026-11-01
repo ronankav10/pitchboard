@@ -5,3 +5,6 @@ pitchboard.db
 venv/
 .streamlit/secrets.toml
 .DS_Store
+
+.agents/
+.claude/

@@ -28,14 +28,14 @@ c1, c2 = st.columns([1, 2])
 with c1:
     zone = st.selectbox("Category", ["All"] + ZONES_WITH_DRILLS)
 with c2:
-    query = st.text_input("Search by name", placeholder="e.g. rondo, 8 v 8, warm up")
+    query = st.text_input("Search name or description", placeholder="e.g. rondo, 8 v 8, pressing, crossing")
 
 drills = DRILL_LIBRARY
 if zone != "All":
     drills = [d for d in drills if d["c"] == zone]
 if query:
     q = query.lower()
-    drills = [d for d in drills if q in d["n"].lower() or q in (d.get("s") or "").lower()]
+    drills = [d for d in drills if q in d["n"].lower() or q in (d.get("s") or "").lower() or q in (d.get("d") or "").lower()]
 
 drills = sorted(drills, key=lambda d: (d["c"], d.get("s") or "", d["n"]))
 
@@ -60,7 +60,9 @@ for row in rows:
             else:
                 st.caption("(no image)")
             label = f"{d['s']} — {d['n']}" if d.get("s") else d["n"]
-            st.caption(label)
+            st.markdown(f"**{label}**")
+            if d.get("d"):
+                st.caption(d["d"])
 
 if shown < len(drills):
     if st.button(f"Show more ({len(drills) - shown} remaining)"):

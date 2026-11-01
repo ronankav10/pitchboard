@@ -49,6 +49,10 @@ need Claude to run.
   Profiles folders) — there's no manual "session type" dropdown anymore,
   it's computed automatically from the day code (or set to "Off" via the
   Fixtures page)
+- Every drill has a short written description (set-up, action, focus) stored
+  as the "d" field in `data/drills.json`, written from each diagram. It shows
+  under the diagram in the quick-add picker and on the Drill Library page,
+  and the library search also matches description text (e.g. "pressing")
 - Estimated training load fields (TD / HSR / sprint distance / explosive
   distance) per session, with the TD/HSR/Duration numbers turning red if
   they exceed the day-type's recommended target by more than 25%

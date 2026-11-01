@@ -352,6 +352,8 @@ with main_col:
                 image_rel = DRILL_IMAGE_MANIFEST.get(qa_drill["n"])
                 if image_rel:
                     st.image(os.path.join(DRILL_IMAGE_ROOT, image_rel), width=220)
+                if qa_drill.get("d"):
+                    st.caption(qa_drill["d"])
         with qa3:
             st.write("")
             st.write("")
